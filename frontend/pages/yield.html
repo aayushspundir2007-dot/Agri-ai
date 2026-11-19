@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Yield Prediction — AgriSmart AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body data-page="yield">
+
+<button class="menu-toggle" aria-label="Open menu">☰</button>
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌱</div>
+      <div>
+        <div class="sidebar-brand-name">AgriSmart AI</div>
+        <div class="sidebar-brand-sub">Decision support for farms</div>
+      </div>
+    </div>
+    <div class="sidebar-user" id="sidebar-user"></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Navigate</div>
+      <a class="nav-link"        data-page="overview"        href="overview.html"><span class="nav-icon">🏠</span> Overview</a>
+      <a class="nav-link"        data-page="crop"            href="crop.html"><span class="nav-icon">🌾</span> Crop Recommendation</a>
+      <a class="nav-link active" data-page="yield"           href="yield.html"><span class="nav-icon">📈</span> Crop Yield Prediction</a>
+      <a class="nav-link"        data-page="disease"         href="disease.html"><span class="nav-icon">🍃</span> Plant Disease Detection</a>
+      <a class="nav-link"        data-page="evaluation"      href="evaluation.html"><span class="nav-icon">📊</span> Model Evaluation</a>
+      <a class="nav-link"        data-page="user-management" href="user-management.html"><span class="nav-icon">👥</span> User Management</a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Model status</div>
+      <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+      <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+      <span class="badge badge-ok">✓ Plant Disease Detection</span>
+      <button class="btn-logout">🚪 Sign Out</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">Research prototype · not a substitute for expert advice.</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div id="hero" data-trained="3"></div>
+
+    <div class="page-title">📈 Crop Yield Prediction</div>
+    <div class="page-caption">Estimate crop yield from region, crop, year and environmental variables.</div>
+
+    <div class="inputs-grid-2" style="margin-bottom:.85rem">
+      <div class="form-group">
+        <label class="form-label" for="area">Country / Area</label>
+        <input class="form-input" type="text" id="area" value="India" placeholder="e.g. India">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="crop">Crop / Item</label>
+        <input class="form-input" type="text" id="crop" value="Wheat" placeholder="e.g. Wheat">
+      </div>
+    </div>
+
+    <div class="inputs-grid-3" style="margin-bottom:.85rem">
+      <div class="form-group">
+        <label class="form-label" for="year">Year</label>
+        <input class="form-input" type="number" id="year" value="2010" min="1961" max="2100">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="rainfall">Avg annual rainfall (mm)</label>
+        <input class="form-input" type="number" id="rainfall" value="1083" min="0" max="10000" step="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pesticides">Pesticides (tonnes)</label>
+        <input class="form-input" type="number" id="pesticides" value="55000" min="0" step="100">
+      </div>
+    </div>
+
+    <div class="form-group" style="max-width:280px;margin-bottom:1rem">
+      <label class="form-label" for="temp">Average temperature (°C)</label>
+      <input class="form-input" type="number" id="temp" value="24" min="-10" max="60" step="0.1">
+    </div>
+
+    <button class="btn btn-primary" id="predict-btn">📈 Predict Yield</button>
+
+    <div id="result-area"></div>
+
+    <div class="expander" style="margin-top:1.2rem">
+      <div class="expander-header">ℹ️ About this model <span class="chevron">▾</span></div>
+      <div class="expander-body">
+        <p><strong>Model:</strong> Extra Trees Regressor (350 trees)</p>
+        <p><strong>Split:</strong> Chronological holdout — latest years as test set</p>
+        <p><strong>Test rows:</strong> 6,251 &nbsp;|&nbsp; <strong>R²:</strong> 0.9555 &nbsp;|&nbsp; <strong>WAPE:</strong> 11.46%</p>
+        <p><strong>Coverage:</strong> 101 areas · 10 crops · 1990–2013</p>
+        <div class="callout" style="margin-top:.6rem">
+          Predictions for years beyond 2013 are extrapolations and carry higher uncertainty.
+        </div>
+      </div>
+    </div>
+
+    <div class="app-footer">🌱 AgriSmart AI — research prototype. Not agronomic advice.</div>
+  </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/app.js"></script>
+<script>
+/* Mock yield prediction — replace with fetch() to Python backend in production */
+const MOCK_YIELDS = {
+  'india-wheat':    25751.14,
+  'france-maize':   71234.00,
+  'brazil-soybeans':24800.00,
+  default:          28000.00,
+};
+
+document.getElementById('predict-btn').addEventListener('click', () => {
+  const btn = document.getElementById('predict-btn');
+  btn.disabled = true;
+  btn.innerHTML = UI.spinner() + ' Predicting…';
+
+  const area = document.getElementById('area').value.trim().toLowerCase();
+  const crop = document.getElementById('crop').value.trim().toLowerCase();
+  const key  = `${area}-${crop}`;
+  const val  = MOCK_YIELDS[key] ?? MOCK_YIELDS.default;
+
+  setTimeout(() => {
+    const area = document.getElementById('result-area');
+    area.innerHTML = UI.resultCard(
+      `${val.toLocaleString('en-IN', {minimumFractionDigits:2})} hg/ha`,
+      'Estimated yield for the given inputs.'
+    ) + `<p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">
+      The unit follows the source dataset (hectogram per hectare).
+      Predictions outside observed geography/time range may be unreliable.</p>`;
+
+    btn.disabled = false;
+    btn.innerHTML = '📈 Predict Yield';
+  }, 700);
+});
+</script>
+</body>
+</html>

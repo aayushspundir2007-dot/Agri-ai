@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════
+   AgriSmart AI — Design Tokens
+   ═══════════════════════════════════════════════ */
+:root {
+  /* colours */
+  --green:       #2e7d32;
+  --green-d:     #1b5e20;
+  --green-l:     #66bb6a;
+  --green-pale:  #e8f5e9;
+  --green-light: #c8e6c9;
+  --bg:          #f6f9f4;
+  --card:        #ffffff;
+  --line:        #e3e8e0;
+  --ink:         #1f2d27;
+  --ink-soft:    #243027;
+  --muted:       #5f6f63;
+
+  /* badge colours */
+  --badge-ok-bg:     #d7f0d9;
+  --badge-ok-fg:     #1b5e20;
+  --badge-warn-bg:   #fff4d6;
+  --badge-warn-fg:   #7a5b00;
+  --badge-admin-bg:  #e3f2fd;
+  --badge-admin-fg:  #0d47a1;
+  --badge-viewer-bg: #f3e5f5;
+  --badge-viewer-fg: #6a1b9a;
+
+  /* error / success */
+  --error-bg:   #fdecea;
+  --error-bd:   #f5c6cb;
+  --error-fg:   #c0392b;
+  --success-bg: #e8f5e9;
+  --success-bd: #c8e6c9;
+  --success-fg: #1b5e20;
+
+  /* typography */
+  --font:       'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+
+  /* radius */
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  16px;
+  --r-xl:  20px;
+  --r-2xl: 24px;
+  --r-pill: 999px;
+
+  /* shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 24px rgba(27,94,32,.12);
+  --shadow-xl: 0 24px 60px rgba(0,0,0,.18);
+
+  /* transitions */
+  --t-fast: .15s ease;
+  --t-med:  .25s ease;
+  --t-bar:  .7s ease;
+
+  /* layout */
+  --sidebar-w: 260px;
+  --content-max: 1100px;
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management — AgriSmart AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body data-page="user-management">
+
+<button class="menu-toggle" aria-label="Open menu">☰</button>
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌱</div>
+      <div>
+        <div class="sidebar-brand-name">AgriSmart AI</div>
+        <div class="sidebar-brand-sub">Decision support for farms</div>
+      </div>
+    </div>
+    <div class="sidebar-user" id="sidebar-user"></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Navigate</div>
+      <a class="nav-link"        data-page="overview"        href="overview.html"><span class="nav-icon">🏠</span> Overview</a>
+      <a class="nav-link"        data-page="crop"            href="crop.html"><span class="nav-icon">🌾</span> Crop Recommendation</a>
+      <a class="nav-link"        data-page="yield"           href="yield.html"><span class="nav-icon">📈</span> Crop Yield Prediction</a>
+      <a class="nav-link"        data-page="disease"         href="disease.html"><span class="nav-icon">🍃</span> Plant Disease Detection</a>
+      <a class="nav-link"        data-page="evaluation"      href="evaluation.html"><span class="nav-icon">📊</span> Model Evaluation</a>
+      <a class="nav-link active" data-page="user-management" href="user-management.html"><span class="nav-icon">👥</span> User Management</a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Model status</div>
+      <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+      <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+      <span class="badge badge-ok">✓ Plant Disease Detection</span>
+      <button class="btn-logout">🚪 Sign Out</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">Research prototype · not a substitute for expert advice.</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div id="hero" data-trained="3"></div>
+
+    <div class="page-title">👥 User Management</div>
+    <div class="page-caption">Admin-only: add, remove or change passwords for platform users.</div>
+
+    <div id="access-denied" style="display:none">
+      <div class="alert alert-error">🚫 Access denied. Admin role required.</div>
+    </div>
+
+    <div id="admin-content">
+      <!-- Current users -->
+      <div class="input-card">
+        <div class="input-card-title">Current users</div>
+        <div class="user-row user-row-header" style="font-size:.78rem;font-weight:700;color:var(--muted)">
+          <div>USERNAME</div><div>NAME</div><div>ROLE</div><div>ACTION</div>
+        </div>
+        <div id="user-list"></div>
+      </div>
+
+      <!-- Add user -->
+      <div class="input-card" style="margin-top:1rem">
+        <div class="input-card-title">➕ Add new user</div>
+        <div class="inputs-grid-4">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input class="form-input" id="nu-username" placeholder="e.g. john">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full name</label>
+            <input class="form-input" id="nu-name" placeholder="e.g. John Smith">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input class="form-input" type="password" id="nu-pass" placeholder="Min 6 chars">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <select class="form-select" id="nu-role">
+              <option value="viewer">viewer</option>
+              <option value="admin">admin</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="add-user-btn" style="margin-top:.8rem">Add user</button>
+        <div id="add-msg"></div>
+      </div>
+
+      <!-- Change password -->
+      <div class="input-card" style="margin-top:1rem">
+        <div class="input-card-title">🔑 Change password</div>
+        <div class="inputs-grid-3">
+          <div class="form-group">
+            <label class="form-label">User</label>
+            <select class="form-select" id="cp-user"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New password</label>
+            <input class="form-input" type="password" id="cp-pass" placeholder="Min 6 chars">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm</label>
+            <input class="form-input" type="password" id="cp-pass2" placeholder="Repeat password">
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="cp-btn" style="margin-top:.8rem">Update password</button>
+        <div id="cp-msg"></div>
+      </div>
+    </div>
+
+    <div class="app-footer">🌱 AgriSmart AI — admin panel.</div>
+  </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/app.js"></script>
+<script>
+/* In-memory user store (session-scoped) — mirrors users.json */
+let USERS = {
+  "admin":  { password:"240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", role:"admin",  name:"Admin User" },
+  "farmer": { password:"26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab", role:"viewer", name:"Farm User"   },
+  "demo":   { password:"d3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791", role:"viewer", name:"Demo Guest"  },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.isAdmin()) {
+    document.getElementById('access-denied').style.display = 'block';
+    document.getElementById('admin-content').style.display  = 'none';
+    return;
+  }
+  renderUsers();
+  populateCpSelect();
+
+  document.getElementById('add-user-btn').addEventListener('click', addUser);
+  document.getElementById('cp-btn').addEventListener('click', changePassword);
+});
+
+function renderUsers() {
+  const list = document.getElementById('user-list');
+  const me   = Auth.currentUser().username;
+  list.innerHTML = Object.entries(USERS).map(([uname, udata]) => `
+    <div class="user-row">
+      <div><b>${uname}</b></div>
+      <div>${udata.name}</div>
+      <div>${UI.badge(udata.role.toUpperCase(), udata.role === 'admin' ? 'admin' : 'viewer')}</div>
+      <div>${uname !== me
+        ? `<button class="btn btn-danger" onclick="removeUser('${uname}')" style="padding:.3rem .7rem;font-size:.82rem">🗑</button>`
+        : '<span style="color:var(--muted);font-size:.82rem">(you)</span>'
+      }</div>
+    </div>`).join('');
+}
+
+function populateCpSelect() {
+  const sel = document.getElementById('cp-user');
+  sel.innerHTML = Object.keys(USERS).map(u => `<option value="${u}">${u}</option>`).join('');
+}
+
+function removeUser(uname) {
+  if (!confirm(`Remove user "${uname}"?`)) return;
+  delete USERS[uname];
+  renderUsers();
+  populateCpSelect();
+  UI.toast(`User "${uname}" removed.`, 'success');
+}
+
+async function addUser() {
+  const msgEl = document.getElementById('add-msg');
+  const uname = document.getElementById('nu-username').value.trim();
+  const name  = document.getElementById('nu-name').value.trim();
+  const pass  = document.getElementById('nu-pass').value;
+  const role  = document.getElementById('nu-role').value;
+
+  if (!uname || !name || !pass) { msgEl.innerHTML = UI.alert('All fields are required.', 'error'); return; }
+  if (pass.length < 6)          { msgEl.innerHTML = UI.alert('Password must be at least 6 characters.', 'error'); return; }
+  if (USERS[uname])             { msgEl.innerHTML = UI.alert(`Username "${uname}" already exists.`, 'error'); return; }
+
+  const hash = await Auth.sha256(pass);
+  USERS[uname] = { password: hash, role, name };
+  renderUsers(); populateCpSelect();
+  msgEl.innerHTML = UI.alert(`User "${uname}" added as ${role}.`, 'success');
+  ['nu-username','nu-name','nu-pass'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function changePassword() {
+  const msgEl = document.getElementById('cp-msg');
+  const uname = document.getElementById('cp-user').value;
+  const pass  = document.getElementById('cp-pass').value;
+  const pass2 = document.getElementById('cp-pass2').value;
+
+  if (!pass)              { msgEl.innerHTML = UI.alert('Enter a new password.', 'error'); return; }
+  if (pass.length < 6)   { msgEl.innerHTML = UI.alert('Password must be at least 6 characters.', 'error'); return; }
+  if (pass !== pass2)    { msgEl.innerHTML = UI.alert('Passwords do not match.', 'error'); return; }
+
+  USERS[uname].password = await Auth.sha256(pass);
+  msgEl.innerHTML = UI.alert(`Password updated for "${uname}".`, 'success');
+  document.getElementById('cp-pass').value = '';
+  document.getElementById('cp-pass2').value = '';
+}
+</script>
+</body>
+</html>

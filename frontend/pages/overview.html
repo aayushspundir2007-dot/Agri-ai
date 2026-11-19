@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overview — AgriSmart AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body data-page="overview">
+
+<button class="menu-toggle" aria-label="Open menu">☰</button>
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌱</div>
+      <div>
+        <div class="sidebar-brand-name">AgriSmart AI</div>
+        <div class="sidebar-brand-sub">Decision support for farms</div>
+      </div>
+    </div>
+    <div class="sidebar-user" id="sidebar-user"></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Navigate</div>
+      <a class="nav-link active" data-page="overview"        href="overview.html"><span class="nav-icon">🏠</span> Overview</a>
+      <a class="nav-link"        data-page="crop"            href="crop.html"><span class="nav-icon">🌾</span> Crop Recommendation</a>
+      <a class="nav-link"        data-page="yield"           href="yield.html"><span class="nav-icon">📈</span> Crop Yield Prediction</a>
+      <a class="nav-link"        data-page="disease"         href="disease.html"><span class="nav-icon">🍃</span> Plant Disease Detection</a>
+      <a class="nav-link"        data-page="evaluation"      href="evaluation.html"><span class="nav-icon">📊</span> Model Evaluation</a>
+      <a class="nav-link"        data-page="user-management" href="user-management.html"><span class="nav-icon">👥</span> User Management</a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Model status</div>
+      <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+      <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+      <span class="badge badge-ok">✓ Plant Disease Detection</span>
+      <button class="btn-logout">🚪 Sign Out</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">Research prototype · not a substitute for expert advice.</p>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div id="hero" data-trained="3"></div>
+
+    <div class="page-title">Platform Overview</div>
+    <div class="page-caption">Three independently trained ML models for smarter farm decisions.</div>
+
+    <!-- Feature cards -->
+    <div class="cards-grid" id="feature-cards"></div>
+
+    <!-- Metrics -->
+    <div class="metrics-row">
+      <div class="metric-tile"><div class="metric-label">Applications</div><div class="metric-value">3</div></div>
+      <div class="metric-tile"><div class="metric-label">Model types</div><div class="metric-value" style="font-size:1.1rem">Classical ML + Image</div></div>
+      <div class="metric-tile"><div class="metric-label">Interface</div><div class="metric-value">Streamlit</div></div>
+    </div>
+
+    <!-- Callout -->
+    <div class="callout">
+      <b>How it works:</b> each module is an independently trained ML model.
+      Crop recommendation and yield estimation use scikit-learn on tabular data;
+      disease detection classifies leaf images. Outputs are research-grade estimates —
+      confirm with local experts before acting.
+    </div>
+
+    <div class="app-footer">
+      🌱 AgriSmart AI — research prototype. Predictions are estimates, not agronomic guarantees.
+      Always confirm decisions with local agronomy experts and field measurements.
+    </div>
+  </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cards = [
+    { icon:'🌾', title:'Crop Recommendation', desc:'Soil nutrients and climate → best crop to plant.',   trained:true  },
+    { icon:'📈', title:'Crop Yield Prediction', desc:'Region, crop, year and environment → estimated yield.', trained:true },
+    { icon:'🍃', title:'Plant Disease Detection', desc:'Upload a leaf image → predicted disease class.', trained:true  },
+  ];
+  document.getElementById('feature-cards').innerHTML =
+    cards.map(c => UI.featureCard(c.icon, c.title, c.desc, c.trained)).join('');
+});
+</script>
+</body>
+</html>

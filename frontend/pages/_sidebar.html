@@ -1,0 +1,48 @@
+<!--
+  Shared sidebar snippet — paste into each page's <aside class="sidebar">.
+  Replace data-page on <body> and set .active on the matching .nav-link.
+-->
+<div class="sidebar-brand">
+  <div class="sidebar-brand-icon">🌱</div>
+  <div>
+    <div class="sidebar-brand-name">AgriSmart AI</div>
+    <div class="sidebar-brand-sub">Decision support for farms</div>
+  </div>
+</div>
+
+<div class="sidebar-user" id="sidebar-user"></div>
+
+<nav class="sidebar-nav">
+  <div class="sidebar-nav-label">Navigate</div>
+  <a class="nav-link" data-page="overview"          href="overview.html">
+    <span class="nav-icon">🏠</span> Overview
+  </a>
+  <a class="nav-link" data-page="crop"              href="crop.html">
+    <span class="nav-icon">🌾</span> Crop Recommendation
+  </a>
+  <a class="nav-link" data-page="yield"             href="yield.html">
+    <span class="nav-icon">📈</span> Crop Yield Prediction
+  </a>
+  <a class="nav-link" data-page="disease"           href="disease.html">
+    <span class="nav-icon">🍃</span> Plant Disease Detection
+  </a>
+  <a class="nav-link" data-page="evaluation"        href="evaluation.html">
+    <span class="nav-icon">📊</span> Model Evaluation
+  </a>
+  <a class="nav-link" data-page="user-management"   href="user-management.html">
+    <span class="nav-icon">👥</span> User Management
+  </a>
+</nav>
+
+<div class="sidebar-status">
+  <div class="sidebar-status-label">Model status</div>
+  <div id="model-status">
+    <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+    <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+    <span class="badge badge-ok">✓ Plant Disease Detection</span>
+  </div>
+  <button class="btn-logout">🚪 Sign Out</button>
+  <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">
+    Research prototype · not a substitute for expert advice.
+  </p>
+</div>

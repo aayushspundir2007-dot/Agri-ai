@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Disease Detection — AgriSmart AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body data-page="disease">
+
+<button class="menu-toggle" aria-label="Open menu">☰</button>
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌱</div>
+      <div>
+        <div class="sidebar-brand-name">AgriSmart AI</div>
+        <div class="sidebar-brand-sub">Decision support for farms</div>
+      </div>
+    </div>
+    <div class="sidebar-user" id="sidebar-user"></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Navigate</div>
+      <a class="nav-link"        data-page="overview"        href="overview.html"><span class="nav-icon">🏠</span> Overview</a>
+      <a class="nav-link"        data-page="crop"            href="crop.html"><span class="nav-icon">🌾</span> Crop Recommendation</a>
+      <a class="nav-link"        data-page="yield"           href="yield.html"><span class="nav-icon">📈</span> Crop Yield Prediction</a>
+      <a class="nav-link active" data-page="disease"         href="disease.html"><span class="nav-icon">🍃</span> Plant Disease Detection</a>
+      <a class="nav-link"        data-page="evaluation"      href="evaluation.html"><span class="nav-icon">📊</span> Model Evaluation</a>
+      <a class="nav-link"        data-page="user-management" href="user-management.html"><span class="nav-icon">👥</span> User Management</a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Model status</div>
+      <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+      <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+      <span class="badge badge-ok">✓ Plant Disease Detection</span>
+      <button class="btn-logout">🚪 Sign Out</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">Research prototype · not a substitute for expert advice.</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div id="hero" data-trained="3"></div>
+
+    <div class="page-title">🍃 Plant Disease Detection</div>
+    <div class="page-caption">Upload a clear leaf photo to classify the disease (Tomato classes from PlantVillage).</div>
+
+    <!-- Drop zone -->
+    <div class="file-drop" id="drop-zone">
+      <div class="file-drop-icon">🍂</div>
+      <div class="file-drop-title">Drop a leaf image here</div>
+      <div class="file-drop-sub">or click to browse — JPG / PNG</div>
+    </div>
+    <input type="file" id="file-input" accept=".jpg,.jpeg,.png" style="display:none">
+
+    <!-- Preview + tips -->
+    <div id="preview-area" style="display:none;margin-top:1rem">
+      <div style="display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap">
+        <img id="leaf-preview" src="" alt="Uploaded leaf"
+             style="width:200px;height:200px;object-fit:cover;border-radius:var(--r-lg);border:1px solid var(--line)">
+        <div class="callout" style="flex:1;min-width:200px">
+          <b>Tips for a reliable prediction:</b><br>
+          • Use a single, well-lit leaf on a plain background.<br>
+          • Avoid blur and large background clutter.<br>
+          • This model recognises Tomato leaf conditions only.
+        </div>
+      </div>
+      <button class="btn btn-primary" id="analyze-btn" style="margin-top:1rem">
+        🔬 Analyze Leaf
+      </button>
+    </div>
+
+    <div id="result-area"></div>
+
+    <div class="expander" style="margin-top:1.2rem">
+      <div class="expander-header">ℹ️ About this model <span class="chevron">▾</span></div>
+      <div class="expander-body">
+        <p><strong>Model:</strong> Histogram Gradient Boosting (150 iterations)</p>
+        <p><strong>Features:</strong> 1,120-dim handcrafted (thumbnail + RGB/HSV histograms + stats)</p>
+        <p><strong>Test accuracy:</strong> 87.5% &nbsp;|&nbsp; <strong>Test F1-macro:</strong> 0.875</p>
+        <p><strong>Classes:</strong> 10 Tomato disease/health conditions</p>
+        <div class="callout" style="margin-top:.6rem">
+          Not a confirmed diagnosis or treatment prescription. Confirm with an agricultural expert.
+        </div>
+      </div>
+    </div>
+
+    <div class="app-footer">🌱 AgriSmart AI — research prototype.</div>
+  </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const CLASSES = [
+  'Tomato — Bacterial spot',
+  'Tomato — Early blight',
+  'Tomato — Late blight',
+  'Tomato — Leaf Mold',
+  'Tomato — Septoria leaf spot',
+  'Tomato — Spider mites',
+  'Tomato — Target Spot',
+  'Tomato — Tomato mosaic virus',
+  'Tomato — Yellow Leaf Curl Virus',
+  'Tomato — healthy',
+];
+
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const preview   = document.getElementById('leaf-preview');
+const previewArea = document.getElementById('preview-area');
+
+UI.initFileDrop(dropZone, fileInput, file => {
+  preview.src = URL.createObjectURL(file);
+  previewArea.style.display = 'block';
+  document.getElementById('result-area').innerHTML = '';
+});
+
+document.getElementById('analyze-btn').addEventListener('click', () => {
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = UI.spinner() + ' Analyzing…';
+
+  /* Mock result — replace with fetch() to Python backend in production */
+  const mockClass = CLASSES[9]; // healthy leaf demo
+  const mockConf  = 0.97;
+  const mockProbs = CLASSES.map((c, i) => ({
+    label: c,
+    value: i === 9 ? mockConf : (1 - mockConf) / (CLASSES.length - 1)
+  })).sort((a, b) => b.value - a.value).slice(0, 5);
+
+  setTimeout(() => {
+    const area = document.getElementById('result-area');
+    area.innerHTML =
+      UI.resultCard(mockClass, '', `${(mockConf * 100).toFixed(1)}%`) +
+      '<b style="display:block;margin:.9rem 0 .3rem">Top-5 predictions</b>' +
+      UI.confBars(mockProbs) +
+      `<div class="alert alert-warning" style="margin-top:.8rem">
+        Not a confirmed diagnosis or treatment prescription.
+        Confirm with an agricultural expert.
+      </div>`;
+    UI.animateBars(area);
+
+    btn.disabled = false;
+    btn.innerHTML = '🔬 Analyze Leaf';
+  }, 800);
+});
+</script>
+</body>
+</html>

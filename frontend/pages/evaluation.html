@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Evaluation — AgriSmart AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+</head>
+<body data-page="evaluation">
+
+<button class="menu-toggle" aria-label="Open menu">☰</button>
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌱</div>
+      <div>
+        <div class="sidebar-brand-name">AgriSmart AI</div>
+        <div class="sidebar-brand-sub">Decision support for farms</div>
+      </div>
+    </div>
+    <div class="sidebar-user" id="sidebar-user"></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-label">Navigate</div>
+      <a class="nav-link"        data-page="overview"        href="overview.html"><span class="nav-icon">🏠</span> Overview</a>
+      <a class="nav-link"        data-page="crop"            href="crop.html"><span class="nav-icon">🌾</span> Crop Recommendation</a>
+      <a class="nav-link"        data-page="yield"           href="yield.html"><span class="nav-icon">📈</span> Crop Yield Prediction</a>
+      <a class="nav-link"        data-page="disease"         href="disease.html"><span class="nav-icon">🍃</span> Plant Disease Detection</a>
+      <a class="nav-link active" data-page="evaluation"      href="evaluation.html"><span class="nav-icon">📊</span> Model Evaluation</a>
+      <a class="nav-link"        data-page="user-management" href="user-management.html"><span class="nav-icon">👥</span> User Management</a>
+    </nav>
+    <div class="sidebar-status">
+      <div class="sidebar-status-label">Model status</div>
+      <span class="badge badge-ok">✓ Crop Recommendation</span><br>
+      <span class="badge badge-ok">✓ Crop Yield Prediction</span><br>
+      <span class="badge badge-ok">✓ Plant Disease Detection</span>
+      <button class="btn-logout">🚪 Sign Out</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;text-align:center">Research prototype · not a substitute for expert advice.</p>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div id="hero" data-trained="3"></div>
+
+    <div class="page-title">📊 Model Evaluation</div>
+    <div class="page-caption">Actual metrics recorded from completed training runs — no invented numbers.</div>
+
+    <!-- Summary table -->
+    <table class="data-table" style="margin-bottom:1.4rem">
+      <thead>
+        <tr>
+          <th>Module</th><th>Selected Model</th><th>Primary Metric</th><th>Value</th><th>Secondary</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Crop Recommendation</td><td>Random Forest</td><td>Test F1-macro</td><td><b>0.9932</b></td><td>Test accuracy 0.9932</td></tr>
+        <tr><td>Crop Yield Prediction</td><td>Extra Trees</td><td>R²</td><td><b>0.9555</b></td><td>RMSE 20,071 · WAPE 11.46%</td></tr>
+        <tr><td>Plant Disease Detection</td><td>Hist. Gradient Boosting</td><td>Test accuracy</td><td><b>0.8750</b></td><td>Test F1-macro 0.8751</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Crop expander -->
+    <div class="expander">
+      <div class="expander-header">🌾 Crop Recommendation — crop_metrics.json <span class="chevron">▾</span></div>
+      <div class="expander-body">
+        <p><strong>Selected model:</strong> RandomForest</p>
+        <table class="data-table">
+          <thead><tr><th>Model</th><th>CV Accuracy</th><th>CV F1-macro</th><th>Test Accuracy</th><th>Test F1-macro</th></tr></thead>
+          <tbody>
+            <tr><td><b>RandomForest ✓</b></td><td>0.9943</td><td>0.9943</td><td>0.9932</td><td>0.9932</td></tr>
+            <tr><td>ExtraTrees</td><td>0.9915</td><td>0.9914</td><td>0.9955</td><td>0.9955</td></tr>
+            <tr><td>SVM-RBF</td><td>0.9812</td><td>0.9810</td><td>0.9909</td><td>0.9909</td></tr>
+            <tr><td>HistGradientBoosting</td><td>0.9915</td><td>0.9915</td><td>0.9886</td><td>0.9886</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Yield expander -->
+    <div class="expander">
+      <div class="expander-header">📈 Crop Yield — yield_metrics.json <span class="chevron">▾</span></div>
+      <div class="expander-body">
+        <p><strong>Selected model:</strong> ExtraTrees (chronological holdout, 6,251 test rows)</p>
+        <table class="data-table">
+          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><b>R²</b></td><td>0.9555</td></tr>
+            <tr><td>MAE</td><td>10,077.6 hg/ha</td></tr>
+            <tr><td>RMSE</td><td>20,071.2 hg/ha</td></tr>
+            <tr><td>WAPE</td><td>11.46%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Disease expander -->
+    <div class="expander">
+      <div class="expander-header">🍃 Plant Disease — disease_metrics.json <span class="chevron">▾</span></div>
+      <div class="expander-body">
+        <p><strong>Selected model:</strong> HistGradientBoosting · 10 Tomato classes</p>
+        <table class="data-table">
+          <thead><tr><th>Model</th><th>CV Accuracy</th><th>CV F1-macro</th><th>Test Accuracy</th><th>Test F1-macro</th></tr></thead>
+          <tbody>
+            <tr><td><b>HistGradientBoosting ✓</b></td><td>0.7958</td><td>0.7932</td><td>0.8750</td><td>0.8751</td></tr>
+            <tr><td>LogisticRegression</td><td>0.6250</td><td>0.6232</td><td>0.7208</td><td>0.7188</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="app-footer">🌱 AgriSmart AI — all metrics are actual values from completed training runs.</div>
+  </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/ui.js"></script>
+<script src="../js/app.js"></script>
+</body>
+</html>
