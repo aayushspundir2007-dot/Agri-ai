@@ -1,0 +1,36 @@
+{
+  "winner": "ExtraTrees",
+  "models": {
+    "RandomForest": {
+      "MAE": 10540.968921138483,
+      "RMSE": 20654.040966311648,
+      "R2": 0.9528344535836579,
+      "WAPE_percent": 11.985484888350829,
+      "test_rows": 6251
+    },
+    "ExtraTrees": {
+      "MAE": 10077.624047204554,
+      "RMSE": 20071.18004197678,
+      "R2": 0.955458933129994,
+      "WAPE_percent": 11.45864404229793,
+      "test_rows": 6251
+    },
+    "HistGradientBoosting": {
+      "MAE": 13180.797470158348,
+      "RMSE": 23179.96577248957,
+      "R2": 0.9405926222938622,
+      "WAPE_percent": 14.98707093028154,
+      "test_rows": 6251
+    }
+  },
+  "features": [
+    "Area",
+    "Item",
+    "Year",
+    "average_rain_fall_mm_per_year",
+    "pesticides_tonnes",
+    "avg_temp"
+  ],
+  "target": "hg/ha_yield",
+  "split": "chronological latest-years holdout when possible"
+}

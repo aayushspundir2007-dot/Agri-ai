@@ -1,0 +1,45 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Large model files (too big for GitHub — regenerate with train_*.py)
+models/*.joblib
+models/*.keras
+models/*.h5
+
+# Large data files (source from Kaggle — see README)
+data/yield/crop_yield.csv
+data/crop_recommendation/*.csv
+data/plant_disease/
+
+# PlantVillage — entire folder (54k images + large metadata files)
+PlantVillage-Dataset-master/
+
+# DOCX report (binary, regenerate with build_report.py)
+PROJECT_REPORT.docx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit cache
+.streamlit/secrets.toml
+
+# Logs / temp
+*.log
+disease_train.log
+yield_train.log
+verify_*.py
+build_report.py
+capture_shots.py
+summarize.py
+
+# IDE
+.vscode/
+.idea/
