@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════
+# AgriSmart AI — Test Runner Image
+# Used by Jenkins CI and docker-compose.test.yml
+# ═══════════════════════════════════════════════
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install test + app dependencies
+RUN pip install --no-cache-dir \
+    fastapi \
+    "uvicorn[standard]" \
+    "python-jose[cryptography]" \
+    "passlib[bcrypt]" \
+    python-multipart \
+    httpx \
+    scikit-learn \
+    pandas \
+    numpy \
+    joblib \
+    Pillow \
+    plotly \
+    streamlit \
+    python-dotenv \
+    matplotlib \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    pytest-html \
+    pytest-xdist \
+    playwright
+
+# Install Playwright browsers (Chromium for E2E)
+RUN playwright install chromium && playwright install-deps chromium
+
+# Copy code
+COPY app/        ./app/
+COPY src/        ./src/
+COPY pytest.ini  ./pytest.ini
+COPY .env.example ./.env.example
+
+# Models and reports mounted at runtime
+RUN mkdir -p models reports
+
+CMD ["pytest", "app/tests/", \
+     "--cov=app", "--cov-report=html:reports/coverage_html", \
+     "--cov-report=xml:reports/coverage.xml", \
+     "-v", "--tb=short", \
+     "--html=reports/test_report.html", "--self-contained-html"]

@@ -1,0 +1,57 @@
+version: "3.9"
+
+# Isolated test environment — run with:
+#   docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+
+services:
+
+  api-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: agrismart-api:test
+    container_name: agrismart_api_test
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./models:/app/models
+      - ./reports:/app/reports
+      - ./users.json:/app/users.json
+    command: >
+      python -m uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 15s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    image: agrismart-test:latest
+    container_name: agrismart_test_runner
+    volumes:
+      - ./models:/app/models
+      - ./reports:/app/reports
+      - ./users.json:/app/users.json
+      - ./app/tests:/app/app/tests
+    environment:
+      - STREAMLIT_API_URL=http://api-test:8000
+    command: >
+      pytest app/tests/unit/ app/tests/integration/
+      --cov=app
+      --cov-report=html:reports/coverage_html
+      --cov-report=xml:reports/coverage.xml
+      -v --tb=short
+      --html=reports/test_report.html
+      --self-contained-html
+      --junitxml=reports/junit.xml
+    depends_on:
+      api-test:
+        condition: service_healthy
