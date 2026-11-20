@@ -97,22 +97,9 @@
 <script src="../js/ui.js"></script>
 <script src="../js/app.js"></script>
 <script>
-const CLASSES = [
-  'Tomato — Bacterial spot',
-  'Tomato — Early blight',
-  'Tomato — Late blight',
-  'Tomato — Leaf Mold',
-  'Tomato — Septoria leaf spot',
-  'Tomato — Spider mites',
-  'Tomato — Target Spot',
-  'Tomato — Tomato mosaic virus',
-  'Tomato — Yellow Leaf Curl Virus',
-  'Tomato — healthy',
-];
-
-const dropZone  = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-const preview   = document.getElementById('leaf-preview');
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const preview    = document.getElementById('leaf-preview');
 const previewArea = document.getElementById('preview-area');
 
 UI.initFileDrop(dropZone, fileInput, file => {
@@ -121,34 +108,50 @@ UI.initFileDrop(dropZone, fileInput, file => {
   document.getElementById('result-area').innerHTML = '';
 });
 
-document.getElementById('analyze-btn').addEventListener('click', () => {
+document.getElementById('analyze-btn').addEventListener('click', async () => {
   const btn = document.getElementById('analyze-btn');
   btn.disabled = true;
   btn.innerHTML = UI.spinner() + ' Analyzing…';
 
-  /* Mock result — replace with fetch() to Python backend in production */
-  const mockClass = CLASSES[9]; // healthy leaf demo
-  const mockConf  = 0.97;
-  const mockProbs = CLASSES.map((c, i) => ({
-    label: c,
-    value: i === 9 ? mockConf : (1 - mockConf) / (CLASSES.length - 1)
-  })).sort((a, b) => b.value - a.value).slice(0, 5);
+  const fileInput = document.getElementById('file-input');
+  const file = fileInput.files[0];
+  if (!file) { btn.disabled = false; btn.innerHTML = '🔬 Analyze Leaf'; return; }
 
-  setTimeout(() => {
-    const area = document.getElementById('result-area');
-    area.innerHTML =
-      UI.resultCard(mockClass, '', `${(mockConf * 100).toFixed(1)}%`) +
-      '<b style="display:block;margin:.9rem 0 .3rem">Top-5 predictions</b>' +
-      UI.confBars(mockProbs) +
-      `<div class="alert alert-warning" style="margin-top:.8rem">
-        Not a confirmed diagnosis or treatment prescription.
-        Confirm with an agricultural expert.
-      </div>`;
-    UI.animateBars(area);
+  const formData = new FormData();
+  formData.append('file', file);
 
-    btn.disabled = false;
-    btn.innerHTML = '🔬 Analyze Leaf';
-  }, 800);
+  try {
+    const token = Auth.getToken();
+    const resp = await fetch('http://localhost:8000/api/predict/disease', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (resp.ok) {
+      const d = await resp.json();
+      const pretty = d.predicted_class.replace('___', ' — ').replace(/_/g, ' ');
+      const top5 = Object.entries(d.top5 || {})
+        .map(([label, value]) => ({ label: label.replace('___',' — ').replace(/_/g,' '), value }));
+
+      const area = document.getElementById('result-area');
+      area.innerHTML =
+        UI.resultCard(pretty, '', `${(d.confidence * 100).toFixed(1)}%`) +
+        (top5.length ? '<b style="display:block;margin:.9rem 0 .3rem">Top-5 predictions</b>' + UI.confBars(top5) : '') +
+        UI.alert('Not a confirmed diagnosis or prescription. Confirm with an agricultural expert.', 'warning');
+      UI.animateBars(area);
+    } else if (resp.status === 401 || resp.status === 403) {
+      Auth.logout();
+    } else {
+      const err = await resp.json();
+      document.getElementById('result-area').innerHTML = UI.alert('API error: ' + (err.detail || resp.status), 'error');
+    }
+  } catch (e) {
+    document.getElementById('result-area').innerHTML = UI.alert('Cannot reach API. Is it running on port 8000?', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🔬 Analyze Leaf';
 });
 </script>
 </body>

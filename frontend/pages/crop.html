@@ -118,56 +118,50 @@
 <script src="../js/ui.js"></script>
 <script src="../js/app.js"></script>
 <script>
-/**
- * Crop recommendation demo — runs entirely in the browser.
- * In production, the predict button POSTs to the Python backend.
- * Here we show the UI flow with mock predictions keyed to known test inputs.
- */
-const MOCK = {
-  default: { crop: 'Jute', probs: [
-    { label:'Jute',       value:.98 },
-    { label:'Papaya',     value:.01 },
-    { label:'Banana',     value:.005},
-    { label:'Mango',      value:.003},
-    { label:'Coconut',    value:.002},
-  ]},
-  rice: { crop: 'Rice', probs: [
-    { label:'Rice',       value:.96 },
-    { label:'Jute',       value:.02 },
-    { label:'Maize',      value:.01 },
-    { label:'Cotton',     value:.005},
-    { label:'Coffee',     value:.005},
-  ]},
-};
-
-function pickMock() {
-  const n  = +document.getElementById('N').value;
-  const r  = +document.getElementById('rainfall').value;
-  const t  = +document.getElementById('temperature').value;
-  if (n < 30 && r > 150 && t > 25) return MOCK.rice;
-  return MOCK.default;
-}
-
-document.getElementById('predict-btn').addEventListener('click', () => {
+document.getElementById('predict-btn').addEventListener('click', async () => {
   const btn = document.getElementById('predict-btn');
   btn.disabled = true;
   btn.innerHTML = UI.spinner() + ' Predicting…';
 
-  setTimeout(() => {
-    const { crop, probs } = pickMock();
-    const html =
-      UI.resultCard(`Recommended: ${crop}`, 'Best crop for this soil and climate profile.') +
-      '<b style="display:block;margin:.9rem 0 .3rem">Top-5 model probabilities</b>' +
-      UI.confBars(probs) +
-      '<p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">Probabilities reflect model confidence, not guarantees of farm suitability.</p>';
+  const payload = {
+    N:           parseFloat(document.getElementById('N').value),
+    P:           parseFloat(document.getElementById('P').value),
+    K:           parseFloat(document.getElementById('K').value),
+    temperature: parseFloat(document.getElementById('temperature').value),
+    humidity:    parseFloat(document.getElementById('humidity').value),
+    ph:          parseFloat(document.getElementById('ph').value),
+    rainfall:    parseFloat(document.getElementById('rainfall').value),
+  };
 
-    const area = document.getElementById('result-area');
-    area.innerHTML = html;
-    UI.animateBars(area);
+  try {
+    const resp = await Auth.apiFetch('/api/predict/crop', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
 
-    btn.disabled = false;
-    btn.innerHTML = '🌱 Recommend Crop';
-  }, 600);
+    if (resp.ok) {
+      const d = await resp.json();
+      const probs = Object.entries(d.probabilities || {})
+        .map(([label, value]) => ({ label, value }));
+
+      const area = document.getElementById('result-area');
+      area.innerHTML =
+        UI.resultCard(`Recommended: ${d.crop}`, 'Best crop for this soil and climate profile.') +
+        (probs.length ? '<b style="display:block;margin:.9rem 0 .3rem">Top-5 model probabilities</b>' + UI.confBars(probs) : '') +
+        '<p style="font-size:.8rem;color:var(--muted);margin-top:.5rem">Probabilities reflect model confidence, not guarantees of farm suitability.</p>';
+      UI.animateBars(area);
+    } else if (resp.status === 401 || resp.status === 403) {
+      Auth.logout();
+    } else {
+      const err = await resp.json();
+      document.getElementById('result-area').innerHTML = UI.alert('API error: ' + (err.detail || resp.status), 'error');
+    }
+  } catch (e) {
+    document.getElementById('result-area').innerHTML = UI.alert('Cannot reach API. Is it running on port 8000?', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '🌱 Recommend Crop';
 });
 </script>
 </body>

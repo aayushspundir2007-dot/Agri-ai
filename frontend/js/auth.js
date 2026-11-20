@@ -1,46 +1,42 @@
 /**
  * AgriSmart AI — Auth module
- * Handles login, logout, session and role-based access.
- * Uses SHA-256 (Web Crypto API) to hash passwords client-side
- * before comparing against the stored hashes.
- *
- * NOTE: In a real deployment this logic lives on the server.
- * This JS module is for a standalone frontend demo / reference.
+ * Calls the FastAPI backend at http://localhost:8000
+ * Stores JWT token in localStorage so it persists across pages.
  */
 
 'use strict';
 
+const API_URL = 'http://localhost:8000';
+
 const Auth = (() => {
 
-  /* ── SHA-256 via Web Crypto ─────────────────── */
-  async function sha256(str) {
-    const buf    = new TextEncoder().encode(str);
-    const digest = await crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(digest))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-
-  /* ── Session ────────────────────────────────── */
+  const TOKEN_KEY   = 'agrismart_token';
   const SESSION_KEY = 'agrismart_session';
 
+  /* ── Session storage ────────────────────────── */
   function getSession() {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const raw = localStorage.getItem(SESSION_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
 
-  function setSession(user) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  function setSession(user, token) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    localStorage.setItem(TOKEN_KEY, token);
   }
 
   function clearSession() {
-    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+  }
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
   }
 
   function isAuthenticated() {
-    return !!getSession();
+    return !!(getSession() && getToken());
   }
 
   function currentUser() {
@@ -52,39 +48,53 @@ const Auth = (() => {
     return s && s.role === 'admin';
   }
 
-  /* ── Login ──────────────────────────────────── */
-  async function login(username, password, usersMap) {
-    /**
-     * usersMap: { username: { password: <sha256hex>, role, name }, ... }
-     * Returns { ok: true, user } on success or { ok: false, error } on failure.
-     */
+  /* ── Login — calls FastAPI /api/auth/login ──── */
+  async function login(username, password) {
     if (!username || !password) {
       return { ok: false, error: 'Please enter both username and password.' };
     }
-    const record = usersMap[username];
-    if (!record) {
-      return { ok: false, error: 'Invalid username or password.' };
+    try {
+      const resp = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const user = { username: data.username, name: data.name, role: data.role };
+        setSession(user, data.access_token);
+        return { ok: true, user };
+      } else if (resp.status === 401) {
+        return { ok: false, error: 'Invalid username or password.' };
+      } else {
+        return { ok: false, error: `Server error (${resp.status}). Try again.` };
+      }
+    } catch (e) {
+      return { ok: false, error: 'Cannot reach API server. Make sure it is running on port 8000.' };
     }
-    const hash = await sha256(password);
-    if (hash !== record.password) {
-      return { ok: false, error: 'Invalid username or password.' };
-    }
-    const session = { username, name: record.name, role: record.role };
-    setSession(session);
-    return { ok: true, user: session };
+  }
+
+  /* ── API call helper ────────────────────────── */
+  async function apiFetch(path, options = {}) {
+    const token = getToken();
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    };
+    return fetch(`${API_URL}${path}`, { ...options, headers });
   }
 
   /* ── Logout ─────────────────────────────────── */
   function logout() {
     clearSession();
-    window.location.href = '../pages/login.html';
+    window.location.href = 'login.html';
   }
 
-  /* ── Guard ──────────────────────────────────── */
+  /* ── Guards ─────────────────────────────────── */
   function requireAuth() {
-    /** Call at top of every protected page. Redirects to login if not authenticated. */
     if (!isAuthenticated()) {
-      window.location.href = '../pages/login.html';
+      window.location.href = 'login.html';
       return false;
     }
     return true;
@@ -93,12 +103,24 @@ const Auth = (() => {
   function requireAdmin() {
     if (!requireAuth()) return false;
     if (!isAdmin()) {
-      window.location.href = '../pages/overview.html';
+      window.location.href = 'overview.html';
       return false;
     }
     return true;
   }
 
-  return { login, logout, requireAuth, requireAdmin,
-           isAuthenticated, isAdmin, currentUser, sha256 };
+  /* ── SHA-256 (kept for compatibility) ────────── */
+  async function sha256(str) {
+    const buf    = new TextEncoder().encode(str);
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  return {
+    login, logout, requireAuth, requireAdmin,
+    isAuthenticated, isAdmin, currentUser,
+    getToken, apiFetch, sha256,
+  };
 })();

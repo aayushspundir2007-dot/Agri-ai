@@ -26,6 +26,9 @@
     <p class="login-title">Welcome back</p>
     <p class="login-sub">Sign in to access the platform</p>
 
+    <!-- API status -->
+    <div id="api-status" style="display:none;margin-bottom:.7rem;font-size:.82rem;text-align:center"></div>
+
     <!-- Error message -->
     <div id="login-error" class="login-error" style="display:none"></div>
 
@@ -61,46 +64,51 @@
 
 <script src="../js/auth.js"></script>
 <script>
-/* Embedded user store — mirrors users.json hashes */
-const USERS = {
-  "admin":  { password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", role: "admin",  name: "Admin User"  },
-  "farmer": { password: "26c07fc7be1668f8ea7e3801d4ffdbf33de487a593a69028936ec49f2c89f6ab", role: "viewer", name: "Farm User"   },
-  "demo":   { password: "d3ad9315b7be5dd53b31a273b3b3aba5defe700808305aa16a3062b76658a791", role: "viewer", name: "Demo Guest"  }
-};
-
-/* If already logged in, skip to app */
-if (Auth.isAuthenticated()) {
-  window.location.href = 'overview.html';
-}
-
-const form   = document.getElementById('login-form');
-const errEl  = document.getElementById('login-error');
-const btn    = document.getElementById('login-btn');
-
-function showError(msg) {
-  errEl.textContent = '❌  ' + msg;
-  errEl.style.display = 'flex';
-}
-
-form.addEventListener('submit', async e => {
-  e.preventDefault();
-  errEl.style.display = 'none';
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Signing in…';
-
-  const result = await Auth.login(username, password, USERS);
-
-  if (result.ok) {
+  /* Redirect if already logged in */
+  if (Auth.isAuthenticated()) {
     window.location.href = 'overview.html';
-  } else {
-    showError(result.error);
-    btn.disabled = false;
-    btn.textContent = 'Sign In →';
   }
-});
+
+  /* Check API is reachable */
+  fetch('http://localhost:8000/api/health')
+    .then(r => r.json())
+    .then(d => {
+      const el = document.getElementById('api-status');
+      el.style.display = 'block';
+      el.style.color = '#2e7d32';
+      el.textContent = '✓ API online — all models loaded';
+    })
+    .catch(() => {
+      const el = document.getElementById('api-status');
+      el.style.display = 'block';
+      el.style.color = '#c0392b';
+      el.textContent = '⚠ API offline — start with: python -m uvicorn app.main:app --port 8000';
+    });
+
+  const form  = document.getElementById('login-form');
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errEl.style.display = 'none';
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
+    const result = await Auth.login(username, password);
+
+    if (result.ok) {
+      window.location.href = 'overview.html';
+    } else {
+      errEl.textContent = '❌  ' + result.error;
+      errEl.style.display = 'flex';
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+    }
+  });
 </script>
 </body>
 </html>
